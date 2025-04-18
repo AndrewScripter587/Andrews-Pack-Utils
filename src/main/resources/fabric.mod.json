@@ -13,10 +13,13 @@
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/AndrewsPackUtils/icon.png",
-	"environment": "server",
+	"environment": "*",
 	"entrypoints": {
 		"main": [
 			"com.andrewgaming.AndrewsPackUtilities"
+		],
+		"client": [
+			"com.andrewgaming.AllowPlayerDataModificationClient"
 		]
 	},
 	"mixins": [
