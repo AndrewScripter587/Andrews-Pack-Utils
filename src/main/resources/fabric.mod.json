@@ -1,0 +1,31 @@
+{
+	"schemaVersion": 1,
+	"id": "allow-player-data-modification",
+	"version": "${version}",
+	"name": "Andrew's Datapack Utils",
+	"description": "Various utilities for datapacks, like modifiable player data and calculations!",
+	"authors": [
+		"AndrewGaming587"
+	],
+	"contact": {
+		"homepage": "https://modrinth.com/user/AndrewGaming587",
+		"sources": "https://github.com/AndrewGaming587"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/AndrewsPackUtils/icon.png",
+	"environment": "server",
+	"entrypoints": {
+		"main": [
+			"com.andrewgaming.AndrewsPackUtilities"
+		]
+	},
+	"mixins": [
+		"AndrewsPackUtils-mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.16.13",
+		"minecraft": "~1.21.5",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
