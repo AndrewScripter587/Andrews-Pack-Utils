@@ -1,6 +1,6 @@
 {
 	"schemaVersion": 1,
-	"id": "allow-player-data-modification",
+	"id": "andrews-pack-utils",
 	"version": "${version}",
 	"name": "Andrew's Datapack Utils",
 	"description": "Various utilities for datapacks, like modifiable player data and calculations!",
@@ -19,7 +19,7 @@
 			"com.andrewgaming.AndrewsPackUtilities"
 		],
 		"client": [
-			"com.andrewgaming.AllowPlayerDataModificationClient"
+			"com.andrewgaming.APUtilsClient"
 		]
 	},
 	"mixins": [
