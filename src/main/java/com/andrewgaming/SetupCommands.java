@@ -111,6 +111,13 @@ public class SetupCommands {
                         )
 
 
-                )));
+                )
+                .then(literal("heartbeat")
+                        .executes(context -> {
+                            context.getSource().sendFeedback(() -> Text.literal("This subcommand exists for datapacks to detect this mod being installed. This subcommand does nothing else other than return 1."), false);
+                            return 1;
+                        })
+                )
+        ));
     }
 }
