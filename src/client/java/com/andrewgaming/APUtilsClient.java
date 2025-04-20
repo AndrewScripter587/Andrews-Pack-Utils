@@ -1,3 +1,5 @@
+// This ain't ever gonna do anything
+
 package com.andrewgaming;
 
 import net.fabricmc.api.ClientModInitializer;
