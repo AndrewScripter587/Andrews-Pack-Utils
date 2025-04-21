@@ -5,16 +5,21 @@ import com.mojang.brigadier.arguments.*;
 import net.minecraft.command.argument.*;
 import net.fabricmc.api.ModInitializer;
 
+import static com.fasterxml.jackson.databind.type.LogicalType.Array;
+import static com.fasterxml.jackson.databind.type.LogicalType.Collection;
 import static net.fabricmc.loader.impl.FabricLoaderImpl.MOD_ID;
 import static net.minecraft.server.command.CommandManager.*;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.Vec3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+
+import java.util.Collection;
 
 public class SetupCommands {
     public static void Init() {
@@ -124,7 +129,44 @@ public class SetupCommands {
                 .then(literal("velocity")
                         .requires(source -> source.hasPermissionLevel(2))
                         .then(argument("entities",EntityArgumentType.entities())
-                                .then(argument("Vector",Vec3ArgumentType.vec3())
+                                .then(argument("Vector",Vec3ArgumentType.vec3(false))
+                                        .then(literal("add")
+                                                .executes(context -> {
+                                                    try {
+                                                        Vec3d velocity = Vec3ArgumentType.getVec3(context, "Vector");
+                                                        Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entities");
+                                                        for (Entity entityIndex : entities) {
+
+                                                            entityIndex.addVelocity(velocity);
+                                                            entityIndex.velocityModified = true;
+                                                            // Don't feel like setting up an instance of LOGGER.
+                                                            System.out.println("The new velocity is " + entityIndex.getVelocity().toString());
+                                                        }
+                                                    } catch (Throwable e) {
+                                                        context.getSource().sendFeedback(() -> Text.literal("An error occurred: " + e), false);
+                                                        return -1;
+                                                    }
+                                                    return 1;
+                                                })
+                                        )
+                                        .then(literal("set")
+                                                .executes(context -> {
+                                                    try {
+                                                        Vec3d velocity = Vec3ArgumentType.getVec3(context, "Vector");
+                                                        Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entities");
+                                                        for (Entity entityIndex : entities) {
+                                                                entityIndex.setVelocity(velocity);
+                                                                entityIndex.velocityModified = true;
+                                                                // Don't feel like setting up an instance of LOGGER.
+                                                            System.out.println("The new velocity is " + entityIndex.getVelocity().toString());
+                                                        }
+                                                    } catch (Throwable e) {
+                                                        context.getSource().sendFeedback(() -> Text.literal("An error occurred: " + e), false);
+                                                        return -1;
+                                                    }
+                                                    return 1;
+                                                })
+                                        )
 
                                 )
                         )
