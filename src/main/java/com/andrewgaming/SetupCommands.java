@@ -1,8 +1,8 @@
 package com.andrewgaming;
 
 import com.mojang.brigadier.arguments.DoubleArgumentType;
-import com.mojang.brigadier.arguments.FloatArgumentType;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.*;
+import net.minecraft.command.argument.*;
 import net.fabricmc.api.ModInitializer;
 
 import static net.fabricmc.loader.impl.FabricLoaderImpl.MOD_ID;
@@ -12,6 +12,9 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 
 public class SetupCommands {
     public static void Init() {
@@ -117,6 +120,14 @@ public class SetupCommands {
                             context.getSource().sendFeedback(() -> Text.literal("This subcommand exists for datapacks to detect this mod being installed. This subcommand does nothing else other than return 1."), false);
                             return 1;
                         })
+                )
+                .then(literal("velocity")
+                        .requires(source -> source.hasPermissionLevel(2))
+                        .then(argument("entities",EntityArgumentType.entities())
+                                .then(argument("Vector",Vec3ArgumentType.vec3())
+
+                                )
+                        )
                 )
         ));
     }
