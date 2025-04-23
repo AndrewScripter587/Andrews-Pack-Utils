@@ -11,6 +11,7 @@ import static net.fabricmc.loader.impl.FabricLoaderImpl.MOD_ID;
 import static net.minecraft.server.command.CommandManager.*;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3d;
 import org.slf4j.Logger;
@@ -130,6 +131,22 @@ public class SetupCommands {
                         .requires(source -> source.hasPermissionLevel(2))
                         .then(argument("entities",EntityArgumentType.entities())
                                 .then(argument("Vector",Vec3ArgumentType.vec3(false))
+                                        .executes(context -> {
+                                            try {
+                                                Vec3d velocity = Vec3ArgumentType.getVec3(context, "Vector");
+                                                Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entities");
+                                                for (Entity entityIndex : entities) {
+                                                    entityIndex.setVelocity(velocity);
+                                                    entityIndex.velocityModified = true;
+                                                    // Don't feel like setting up an instance of LOGGER.
+                                                    System.out.println("The new velocity is " + entityIndex.getVelocity().toString());
+                                                }
+                                            } catch (Throwable e) {
+                                                context.getSource().sendFeedback(() -> Text.literal("An error occurred: " + e), false);
+                                                return -1;
+                                            }
+                                            return 1;
+                                        })
                                         .then(literal("add")
                                                 .executes(context -> {
                                                     try {
@@ -169,6 +186,16 @@ public class SetupCommands {
                                         )
 
                                 )
+                        )
+                )
+                .then(literal("attack_cooldown")
+                        .then(argument("player",EntityArgumentType.player())
+                                .executes(context -> {
+                                    ServerPlayerEntity player = EntityArgumentType.getPlayer(context,"player");
+                                    float cooldown = player.getAttackCooldownProgress(0f);
+                                    context.getSource().sendFeedback(() -> Text.literal("The attack cooldown progress of %s is %s".formatted(context.getSource().getName(),cooldown)),true);
+                                    return (int) (cooldown * 100);
+                                })
                         )
                 )
         ));
