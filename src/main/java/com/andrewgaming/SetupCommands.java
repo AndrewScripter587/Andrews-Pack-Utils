@@ -2,6 +2,8 @@ package com.andrewgaming;
 
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.*;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.command.argument.*;
 import net.fabricmc.api.ModInitializer;
 
@@ -11,18 +13,22 @@ import static net.fabricmc.loader.impl.FabricLoaderImpl.MOD_ID;
 import static net.minecraft.server.command.CommandManager.*;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.server.command.ParticleCommand;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.InvalidIdentifierException;
 import net.minecraft.util.math.Vec3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.boss.BossBar;
+import com.andrewgaming.AndrewsPackUtilities;
 
 import java.util.Collection;
 
-public class SetupCommands {
+public class SetupCommands{
     public static void Init() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("aputils")
                 .then(literal("calc")
@@ -195,6 +201,27 @@ public class SetupCommands {
                                     float cooldown = player.getAttackCooldownProgress(0f);
                                     context.getSource().sendFeedback(() -> Text.literal("The attack cooldown progress of %s is %s".formatted(context.getSource().getName(),cooldown)),true);
                                     return (int) (cooldown * 100);
+                                })
+                        )
+                )
+                .then(literal("despawn")
+                        .requires(source -> source.hasPermissionLevel(2))
+                        .then(argument("entities",EntityArgumentType.entities())
+                                .executes(context -> {
+                                    Collection<? extends Entity> entities = EntityArgumentType.getEntities(context,"entities");
+                                    for (Entity entity : entities) {
+                                        if (entity.isPlayer()) {
+                                            context.getSource().sendFeedback(() -> Text.literal("§cPlayers aren't allowed, but the provided target selector references one or more player(s)."),false);
+                                            AndrewsPackUtilities.LOGGER.info("Command failed because a player was included in the target selector.");
+                                            return -1;
+                                        }
+                                    }
+                                    for (Entity entity : entities) {
+                                        AndrewsPackUtilities.LOGGER.info("Despawning %s (UUID %s)".formatted(entity.getType().toString(),entity.getUuidAsString()));
+                                        entity.remove(Entity.RemovalReason.DISCARDED);
+                                    }
+                                    context.getSource().sendFeedback(() -> Text.literal(("Successfully despawned %s " + (entities.toArray().length == 1 ? "entity" : "entities") + ".").formatted(entities.toArray().length)),true);
+                                    return 1;
                                 })
                         )
                 )
