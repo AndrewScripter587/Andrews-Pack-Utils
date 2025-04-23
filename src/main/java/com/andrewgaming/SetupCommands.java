@@ -212,7 +212,7 @@ public class SetupCommands{
                                     for (Entity entity : entities) {
                                         if (entity.isPlayer()) {
                                             context.getSource().sendFeedback(() -> Text.literal("§cPlayers aren't allowed, but the provided target selector references one or more player(s)."),false);
-                                            AndrewsPackUtilities.LOGGER.info("Command failed because a player was included in the target selector.");
+                                            AndrewsPackUtilities.LOGGER.info("Command failed because a player was included in the target selector. To bypass this (Don't unless you want crashes and/or major issues to happen!), add 'force' to the end of the command you used. Requires permission level 4 to use 'force'.");
                                             return -1;
                                         }
                                     }
@@ -223,6 +223,19 @@ public class SetupCommands{
                                     context.getSource().sendFeedback(() -> Text.literal(("Successfully despawned %s " + (entities.toArray().length == 1 ? "entity" : "entities") + ".").formatted(entities.toArray().length)),true);
                                     return 1;
                                 })
+                                .then(literal("force")
+                                        .requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(4))
+                                        .executes(context -> {
+                                            Collection<? extends Entity> entities = EntityArgumentType.getEntities(context,"entities");
+                                            context.getSource().sendFeedback(() -> Text.literal("Forcefully attempting to despawn. This WILL cause issues if a player is in the provided target selector."),true);
+                                            for (Entity entity : entities) {
+                                                AndrewsPackUtilities.LOGGER.info("Despawning %s (UUID %s)".formatted(entity.getType().toString(),entity.getUuidAsString()));
+                                                entity.remove(Entity.RemovalReason.DISCARDED);
+                                            }
+                                            context.getSource().sendFeedback(() -> Text.literal(("Successfully despawned %s " + (entities.toArray().length == 1 ? "entity" : "entities") + ".").formatted(entities.toArray().length)),true);
+                                            return 1;
+                                        })
+                                )
                         )
                 )
         ));
