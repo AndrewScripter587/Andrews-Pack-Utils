@@ -24,6 +24,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.boss.BossBar;
+import net.minecraft.entity.boss.dragon.*;
+import net.minecraft.entity.boss.dragon.phase.*;
 import com.andrewgaming.AndrewsPackUtilities;
 
 import java.util.Collection;
@@ -41,7 +43,7 @@ public class SetupCommands{
                                                     final double value1 = DoubleArgumentType.getDouble(context, "value1");
                                                     final double value2 = DoubleArgumentType.getDouble(context, "value2");
                                                     final double result = value1 + value2;
-                                                    context.getSource().sendFeedback(() -> Text.literal(String.valueOf(value1) + " + " + String.valueOf(value2) + " = " + result), false);
+                                                    context.getSource().sendFeedback(() -> Text.literal(value1 + " + " + value2 + " = " + result), false);
 
                                                     return (int) result;
                                                 })
