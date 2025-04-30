@@ -26,11 +26,11 @@
 		"AndrewsPackUtils-mixins.json"
 	],
 	"depends": {
-		"fabricloader": ">=0.16.13",
 		"java": ">=21",
 		"fabric-api": "*"
 	},
 	"recommends": {
+		"fabricloader": ">=0.16.13",
 		"minecraft": ">=1.21.5"
 	}
 }
