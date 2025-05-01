@@ -13,6 +13,7 @@ import static net.fabricmc.loader.impl.FabricLoaderImpl.MOD_ID;
 import static net.minecraft.server.command.CommandManager.*;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.server.command.ParticleCommand;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -240,6 +241,20 @@ public class SetupCommands{
                                 )
                         )
                 )
+// Have to give up on this for now
+//                .then(literal("packet")
+//
+//                        .then(argument("player",EntityArgumentType.player())
+//                                .then(literal("set_entity_motion")
+//                                .executes(context -> {
+//                                            ServerPlayerEntity player = EntityArgumentType.getPlayer(context,"client");
+//                                            Packet<?> packetToSend = new net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket(player);
+//                                            player.networkHandler.sendPacket(packetToSend);
+//                                            return 1;
+//                                        }
+//                                ))
+//                        )
+//                )
         ));
     }
 }
