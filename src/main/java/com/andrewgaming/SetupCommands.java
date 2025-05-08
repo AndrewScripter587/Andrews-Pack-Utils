@@ -14,6 +14,7 @@ import static net.minecraft.server.command.CommandManager.*;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
 import net.minecraft.server.command.ParticleCommand;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -147,6 +148,9 @@ public class SetupCommands{
                                                 for (Entity entityIndex : entities) {
                                                     entityIndex.setVelocity(velocity);
                                                     entityIndex.velocityModified = true;
+                                                    if (entityIndex instanceof ServerPlayerEntity) {
+                                                        ((ServerPlayerEntity) entityIndex).networkHandler.sendPacket(new EntityVelocityUpdateS2CPacket(entityIndex));
+                                                    }
                                                     // Don't feel like setting up an instance of LOGGER.
                                                     System.out.println("The new velocity is " + entityIndex.getVelocity().toString());
                                                 }
@@ -162,9 +166,14 @@ public class SetupCommands{
                                                         Vec3d velocity = Vec3ArgumentType.getVec3(context, "Vector");
                                                         Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entities");
                                                         for (Entity entityIndex : entities) {
-
+                                                            
                                                             entityIndex.addVelocity(velocity);
                                                             entityIndex.velocityModified = true;
+                                                            entityIndex.velocityDirty = true;
+                                                            if (entityIndex instanceof ServerPlayerEntity) {
+                                                                ((ServerPlayerEntity) entityIndex).networkHandler.sendPacket(new EntityVelocityUpdateS2CPacket(entityIndex));
+                                                            }
+
                                                             // Don't feel like setting up an instance of LOGGER.
                                                             System.out.println("The new velocity is " + entityIndex.getVelocity().toString());
                                                         }
@@ -181,10 +190,13 @@ public class SetupCommands{
                                                         Vec3d velocity = Vec3ArgumentType.getVec3(context, "Vector");
                                                         Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entities");
                                                         for (Entity entityIndex : entities) {
-                                                                entityIndex.setVelocity(velocity);
-                                                                entityIndex.velocityModified = true;
-                                                                // Don't feel like setting up an instance of LOGGER.
-                                                            System.out.println("The new velocity is " + entityIndex.getVelocity().toString());
+                                                            entityIndex.setVelocity(velocity);
+                                                            entityIndex.velocityModified = true;
+                                                            if (entityIndex instanceof ServerPlayerEntity) {
+                                                                ((ServerPlayerEntity) entityIndex).networkHandler.sendPacket(new EntityVelocityUpdateS2CPacket(entityIndex));
+                                                            }
+                                                            // Don't feel like setting up an instance of LOGGER.
+                                                            AndrewsPackUtilities.LOGGER.info("The new velocity is " + entityIndex.getVelocity().toString());
                                                         }
                                                     } catch (Throwable e) {
                                                         context.getSource().sendFeedback(() -> Text.literal("An error occurred: " + e), false);
