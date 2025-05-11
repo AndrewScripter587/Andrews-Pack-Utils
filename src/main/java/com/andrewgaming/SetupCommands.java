@@ -1,36 +1,30 @@
 package com.andrewgaming;
 
 import com.mojang.brigadier.arguments.DoubleArgumentType;
-import com.mojang.brigadier.arguments.*;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.command.argument.*;
-import net.fabricmc.api.ModInitializer;
 
-import static com.fasterxml.jackson.databind.type.LogicalType.Array;
-import static com.fasterxml.jackson.databind.type.LogicalType.Collection;
-import static net.fabricmc.loader.impl.FabricLoaderImpl.MOD_ID;
+
 import static net.minecraft.server.command.CommandManager.*;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.minecraft.network.packet.Packet;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageType;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.server.command.ParticleCommand;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
-import net.minecraft.util.InvalidIdentifierException;
 import net.minecraft.util.math.Vec3d;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.boss.BossBar;
-import net.minecraft.entity.boss.dragon.*;
-import net.minecraft.entity.boss.dragon.phase.*;
-import com.andrewgaming.AndrewsPackUtilities;
 
 import java.util.Collection;
+import java.util.Optional;
 
 public class SetupCommands{
     public static void Init() {
@@ -135,6 +129,12 @@ public class SetupCommands{
                         .executes(context -> {
                             context.getSource().sendFeedback(() -> Text.literal("This subcommand exists for datapacks to detect this mod being installed. This subcommand does nothing else other than return 1."), false);
                             return 1;
+                        })
+                )
+                .then(literal("loader")
+                        .executes(context -> {
+                            context.getSource().sendFeedback(() -> Text.literal("This subcommand exists for datapacks to detect which loader version of the mod is installed. This subcommand does nothing else other than return 1 on neoforge, and 0 on fabric."), false);
+                            return 0;
                         })
                 )
                 .then(literal("velocity")
@@ -253,20 +253,61 @@ public class SetupCommands{
                                 )
                         )
                 )
-// Have to give up on this for now
-//                .then(literal("packet")
-//
-//                        .then(argument("player",EntityArgumentType.player())
-//                                .then(literal("set_entity_motion")
-//                                .executes(context -> {
-//                                            ServerPlayerEntity player = EntityArgumentType.getPlayer(context,"client");
-//                                            Packet<?> packetToSend = new net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket(player);
-//                                            player.networkHandler.sendPacket(packetToSend);
-//                                            return 1;
-//                                        }
-//                                ))
-//                        )
-//                )
+                        .then(literal("check_damage")
+                                .requires(source -> source.hasPermissionLevel(2))
+                                .then(argument("target", EntityArgumentType.entity())
+                                        .executes(context -> checkDamage(context.getSource(), EntityArgumentType.getEntity(context, "target"), null))
+                                        .then(argument("damage_predicate", StringArgumentType.string())
+                                                .executes(context -> checkDamage(context.getSource(), EntityArgumentType.getEntity(context, "target"), StringArgumentType.getString(context, "damage_predicate")))
+                                        )
+                                )
+                        )
         ));
+// Register a server tick event to reset the damage flags
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            for (net.minecraft.server.world.ServerWorld world : server.getWorlds()) {
+                for (Entity entity : world.iterateEntities()) {
+                    if (entity instanceof LivingEntity) {
+                        ((IEntityDamageAccessor) entity).resetDamageFlags();
+                    }
+                }
+            }
+        });
+    }
+    private static int checkDamage(ServerCommandSource source, Entity target, String damagePredicate) throws CommandSyntaxException {
+        try {
+
+            if (((IEntityDamageAccessor) target).hasTakenDamageThisTick()) {
+                if (damagePredicate == null) {
+                    source.sendFeedback(() -> Text.literal("The provided entity took damage!"), false);
+                    return 1;
+                } else {
+
+                    DamageSource lastSource = ((IEntityDamageAccessor) target).getLastDamageSourceThisTick();
+                    if (lastSource != null) {
+                        Optional<RegistryKey<DamageType>> damageTypeId = lastSource.getTypeRegistryEntry().getKey();
+                        String damageTypeIdStringified = damageTypeId.orElse(DamageTypes.GENERIC).getValue().toString();
+                        if (damagePredicate.equals(damageTypeIdStringified)) {
+                            source.sendFeedback(() -> Text.literal("The provided entity took damage of type: " + damageTypeIdStringified), true);
+                            return 1;
+                        } else {
+                            source.sendError(Text.literal("The entity took damage, but it did not match the specified damage type."));
+                            source.sendFeedback(() -> Text.literal("The type of damage that WAS taken is: " + damageTypeIdStringified), true);
+                            return 0;
+                        }
+                    } else {
+                        source.sendError(Text.literal("The entity took damage, but the damage source could not be determined."));
+                        return 0;
+                    }
+                }
+            } else {
+                source.sendError(Text.literal("The entity didn't take damage!"));
+                return 0;
+            }
+
+        } catch (Exception e) {
+            source.sendError(Text.literal("An error happened: " + e.toString()));
+        }
+        return 0;
     }
 }
