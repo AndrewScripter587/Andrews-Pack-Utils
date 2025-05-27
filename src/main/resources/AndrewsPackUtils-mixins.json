@@ -3,10 +3,12 @@
   "package": "com.andrewgaming.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "AllowPlayerDataEditing",
+    "AllowPlayerDataEditing"
+  ],
+  "server": [
     "EntityDamageMixin"
   ],
   "injectors": {
-    "defaultRequire": 1
+    "defaultRequire": 0
 	}
 }

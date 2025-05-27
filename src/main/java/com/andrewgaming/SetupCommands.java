@@ -22,12 +22,14 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.entity.Entity;
+import org.slf4j.Logger;
 
 import java.util.Collection;
 import java.util.Optional;
 
 public class SetupCommands{
     public static void Init() {
+        Logger LOGGER = AndrewsPackUtilities.LOGGER;
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("aputils")
                 .then(literal("calc")
                         .then(literal("add")
@@ -268,7 +270,9 @@ public class SetupCommands{
             for (net.minecraft.server.world.ServerWorld world : server.getWorlds()) {
                 for (Entity entity : world.iterateEntities()) {
                     if (entity instanceof LivingEntity) {
-                        ((IEntityDamageAccessor) entity).resetDamageFlags();
+                        if (entity instanceof IEntityDamageAccessor) {
+                            ((IEntityDamageAccessor) entity).resetDamageFlags();
+                        }
                     }
                 }
             }
@@ -276,7 +280,10 @@ public class SetupCommands{
     }
     private static int checkDamage(ServerCommandSource source, Entity target, String damagePredicate) throws CommandSyntaxException {
         try {
-
+            if (!(target instanceof IEntityDamageAccessor)) {
+                source.sendError(Text.literal("Damage detection is not available because the required mixin didn't load, likely because it doesn't work on your Minecraft version."));
+                return 0;
+            }
             if (((IEntityDamageAccessor) target).hasTakenDamageThisTick()) {
                 if (damagePredicate == null) {
                     source.sendFeedback(() -> Text.literal("The provided entity took damage!"), false);
@@ -306,7 +313,9 @@ public class SetupCommands{
             }
 
         } catch (Exception e) {
-            source.sendError(Text.literal("An error happened: " + e.toString()));
+            source.sendError(Text.literal("Received Exception: " + e.toString()));
+        } catch (Throwable e) {
+            source.sendError(Text.literal("Received Throwable: " + e.toString()));
         }
         return 0;
     }
